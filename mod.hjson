@@ -1,0 +1,5 @@
+name: "SectorCheatTools"
+author: "Halu"
+description: "Capture sectors and build freely without resources."
+version: "1.0"
+main: scripts/main.js
