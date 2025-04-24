@@ -1,68 +1,74 @@
-const Vars = require("arc.Core").app;
-const Call = require("mindustry.net.Call");
-const Player = require("mindustry.gen.Player");
-const ui = Vars.ui;
-let menuOpened = false;
+// scripts/main.js
+const Vars            = require("mindustry.Vars");
+const Call            = require("mindustry.net.Call");
+const Events          = require("mindustry.game.EventType");
+const { BuildSelectEvent, ClientLoadEvent } = require("mindustry.game.EventType");
+const { BaseDialog }  = require("mindustry.ui.dialogs");
+const { TextButton, Styles } = require("mindustry.ui");
 
+let menuOpened = false;
 let toggles = {
-    freeBuild: false,
-    infiniteResources: false
+  freeBuild: false,
+  infiniteResources: false
 };
 
-// UI button to open menu
-Events.on(ClientLoadEvent, e => {
-    Vars.ui.hudGroup.addChild(() => {
-        let b = new TextButton("⚙ SCT", Styles.clearTogglei);
-        b.clicked(() => {
-            if (!menuOpened) openMenu();
-            menuOpened = !menuOpened;
-        });
-        b.top().left().margin(6);
-        return b;
+// ▶ Add a little ⚙ button to the HUD
+Events.on(ClientLoadEvent, () => {
+  Vars.ui.hudGroup.addChild(() => {
+    let btn = new TextButton("⚙ SCT", Styles.clearTogglei);
+    btn.clicked(() => {
+      if (!menuOpened) openMenu();
+      else           dialog.hide();
+      menuOpened = !menuOpened;
     });
+    btn.top().left().margin(6);
+    return btn;
+  });
 });
 
-// Main menu UI
-function openMenu() {
-    let dialog = new BaseDialog("SectorCheatTools");
+// ▶ Build the dialog
+let dialog;
+function openMenu(){
+  dialog = new BaseDialog("SectorCheatTools");
 
-    dialog.cont.check("Infinite Resources", toggles.infiniteResources, val => {
-        toggles.infiniteResources = val;
-        Vars.state.rules.infiniteResources = val;
-    }).row();
+  dialog.cont.check("Infinite Resources", toggles.infiniteResources, v => {
+    toggles.infiniteResources = v;
+    Vars.state.rules.infiniteResources = v;
+  }).row();
 
-    dialog.cont.check("Free Build", toggles.freeBuild, val => {
-        toggles.freeBuild = val;
-    }).row();
+  dialog.cont.check("Free Build", toggles.freeBuild, v => {
+    toggles.freeBuild = v;
+  }).row();
 
-    dialog.cont.button("Capture Sector", () => {
-        let sector = Vars.state.rules.sector;
-        if (sector != null && !sector.hasBase()) {
-            sector.info.capture();
-            Vars.ui.showInfoToast("[green]Sector captured!", 3);
-        } else {
-            Vars.ui.showInfoToast("[scarlet]Already captured or null", 3);
-        }
-    }).row();
+  dialog.cont.button("Capture Sector", () => {
+    let sector = Vars.state.rules.sector;
+    if (sector && !sector.hasBase()){
+      sector.info.capture();
+      Vars.ui.showInfoToast("[green]Sector captured!", 3);
+    } else {
+      Vars.ui.showInfoToast("[scarlet]Already captured or null", 3);
+    }
+  }).row();
 
-    dialog.cont.button("Close", dialog.hide).row();
+  dialog.cont.button("Close", () => {
+    dialog.hide();
+    menuOpened = false;
+  }).row();
 
-    dialog.show();
+  dialog.show();
 }
 
-// Free build handler
+// ▶ Hook free-build
 Events.on(BuildSelectEvent, e => {
-    if (toggles.freeBuild && !e.breaking && e.builder != null && e.builder.buildRequest != null) {
-        e.builder.buildRequest.freeBuild = true;
-    }
+  if (toggles.freeBuild && !e.breaking && e.builder && e.builder.buildRequest){
+    e.builder.buildRequest.freeBuild = true;
+  }
 });
 
-// Infinite resource handler
+// ▶ Keep resources infinite
 Events.run(Trigger.update, () => {
-    if (toggles.infiniteResources) {
-        let team = Vars.player.team();
-        if (team.core()) {
-            team.core().items().clear();
-        }
-    }
+  if (toggles.infiniteResources){
+    let core = Vars.player.team().core();
+    if (core) core.items().clear();
+  }
 });
