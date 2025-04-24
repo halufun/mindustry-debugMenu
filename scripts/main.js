@@ -67,4 +67,4 @@ function findNearestCore() {
 }
 
 // Bind the 'C' key to open the cheat menu
-Core.input.keyDown(Core.input.Keys.C, showMenu);
+input.keyDown(Keycode.C, showMenu);
