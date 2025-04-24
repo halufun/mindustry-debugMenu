@@ -1,24 +1,17 @@
 // scripts/cheat.js
 
-// Import Java classes via Java.type
-const Core        = Java.type("arc.Core");
-const Vars        = Java.type("mindustry.Vars");
-const Groups      = Java.type("mindustry.game.Groups");
-const Dialog      = Java.type("arc.scene.ui.Dialog");
-const TextField   = Java.type("arc.scene.ui.TextField");
-const Select      = Java.type("arc.scene.ui.Select");
-const TextButton  = Java.type("arc.scene.ui.TextButton");
-const CoreBuild   = Java.type("mindustry.world.blocks.storage.CoreBlock$CoreBuild");
+// Global classes and helpers (Core, Vars, Groups, Dialog, etc.) are already injected
+// No Java.type() calls required
 
 function showMenu() {
-  const dialog = new Dialog("Cheat Menu");
-  const cont   = dialog.content;
+  const dialog      = new Dialog("Cheat Menu");
+  const cont        = dialog.content;
 
   // ── Add Resources ─────────────────────────────────
   cont.add("Add Resources to Core").row();
   const amountField = new TextField("1000");
   cont.add(amountField).row();
-  const itemSelect = new Select(Vars.content.items());
+  const itemSelect  = new Select(Vars.content.items());
   cont.add(itemSelect).row();
   cont.add(new TextButton("Give", () => {
     const amount = parseInt(amountField.getText());
@@ -34,17 +27,17 @@ function showMenu() {
 
   // ── Spawn Units ───────────────────────────────────
   cont.add("Spawn Units").row();
-  const teamSelect = new Select(Vars.content.teams());
+  const teamSelect  = new Select(Vars.content.teams());
   cont.add(teamSelect).row();
-  const unitSelect = new Select(Vars.content.units());
+  const unitSelect  = new Select(Vars.content.units());
   cont.add(unitSelect).row();
-  const countField = new TextField("10");
+  const countField  = new TextField("10");
   cont.add(countField).row();
   cont.add(new TextButton("Spawn", () => {
     const team  = teamSelect.getSelected();
     const type  = unitSelect.getSelected();
-    const count = parseInt(countField.getText());
-    for (let i = 0; i < count; i++) {
+    const cnt   = parseInt(countField.getText());
+    for (let i = 0; i < cnt; i++) {
       const u = type.create(team);
       u.set(Vars.player.x, Vars.player.y);
       u.add();
@@ -53,19 +46,18 @@ function showMenu() {
 
   // ── Instabuild Toggle ────────────────────────────
   cont.add(new TextButton("Toggle Instabuild", () => {
-    const rules = Vars.state.rules;
-    rules.infiniteResources = !rules.infiniteResources;
+    Vars.state.rules.infiniteResources = !Vars.state.rules.infiniteResources;
   })).row();
 
   dialog.addCloseButton();
   dialog.show();
 }
 
-// Helper: find the nearest core controlled by the player’s team
+// Helper: locate the nearest core on the player’s team
 function findNearestCore() {
   let closest = null;
   Groups.build.each(b => {
-    if (b instanceof CoreBuild && b.team == Vars.player.team()) {
+    if (b instanceof CoreBlock.CoreBuild && b.team === Vars.player.team()) {
       if (!closest || b.dst(Vars.player) < closest.dst(Vars.player)) {
         closest = b;
       }
@@ -74,7 +66,5 @@ function findNearestCore() {
   return closest;
 }
 
-// Bind the “C” key to open the menu
-Core.input.keyDown(Core.input.Keys.C, () => {
-  showMenu();
-});
+// Bind the 'C' key to open the cheat menu
+Core.input.keyDown(Core.input.Keys.C, showMenu);
