@@ -10,19 +10,20 @@ var dialog;
 
 // --- HUD button on client load ---
 Events.on(ClientLoadEvent, function() {
-    Vars.ui.hudGroup.addChild(function() {
-        var btn = new TextButton("⚙ SCT", Styles.clearTogglei);
-        btn.clicked(function() {
-            if(!menuOpened) {
-                openMenu();
-            } else {
-                dialog.hide();
-            }
-            menuOpened = !menuOpened;
-        });
-        btn.top().left().margin(6);
-        return btn;
+    // create the button
+    var btn = new TextButton("⚙ SCT", Styles.clearTogglei);
+    btn.clicked(function() {
+        if(!menuOpened) {
+            openMenu();
+        } else {
+            dialog.hide();
+        }
+        menuOpened = !menuOpened;
     });
+    btn.top().left().margin(6);
+
+    // add the actor directly
+    Vars.ui.hudGroup.addChild(btn);
 });
 
 // --- build and show the dialog ---
